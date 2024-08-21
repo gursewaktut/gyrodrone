@@ -38,4 +38,4 @@ extern "C" {
 #endif
 
 
-#endif /* INC_MPU6050_H_
+#endif /* __MAIN_H_
