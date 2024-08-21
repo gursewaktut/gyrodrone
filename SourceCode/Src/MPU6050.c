@@ -19,7 +19,7 @@
 
 
 /* Global Functions ----------------------------------------------------*/
-void MPU6050_Init()
+void MPU6050_Init(void)
 {
 
 }
