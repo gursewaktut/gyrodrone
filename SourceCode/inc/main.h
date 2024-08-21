@@ -20,12 +20,16 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------*/
+#include <stdio.h>
 #include <math.h>
-#include <stdlib.h>
 
+// uncomment when connected to pico
+//#include "pico/stdlib.h"
+//#include "hardware/i2c.h"
 
 /* Global Variables ----------------------------------------------------*/
-
+#define I2C_PORT0	i2c0
+#define I2C_PORT1	i2c1
 
 
 /* Global Function Prototypes ------------------------------------------*/
