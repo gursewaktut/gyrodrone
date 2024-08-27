@@ -1,116 +1,126 @@
-/**
- * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
-
-#include <stdio.h>
-#include <string.h>
 #include "pico/stdlib.h"
-#include "pico/binary_info.h"
 #include "hardware/i2c.h"
+#include <stdio.h>
 
-/* Example code to talk to a MPU6050 MEMS accelerometer and gyroscope
+// I2C defines
+#define I2C_PORT i2c0
+#define MPU6050_ADDR 0x68
 
-   This is taking to simple approach of simply reading registers. It's perfectly
-   possible to link up an interrupt line and set things up to read from the
-   inbuilt FIFO to make it more useful.
+// MPU6050 register addresses
+#define REG_PWR_MGMT_1 0x6B
+#define REG_ACCEL_XOUT_H 0x3B
+#define REG_GYRO_CONFIG 0x1B
+#define REG_ACCEL_CONFIG 0x1C
+#define REG_SMPLRT_DIV 0x19
+#define WHO_AM_I_REG 0x75
 
-   NOTE: Ensure the device is capable of being driven at 3.3v NOT 5v. The Pico
-   GPIO (and therefore I2C) cannot be used at 5v.
+// Sensitivity scale factors for different ranges
+#define ACCEL_SCALE_FACTOR_2G 16384.0  // for ±2g
+#define ACCEL_SCALE_FACTOR_4G 8192.0   // for ±4g
+#define ACCEL_SCALE_FACTOR_8G 4096.0   // for ±8g
+#define ACCEL_SCALE_FACTOR_16G 2048.0  // for ±16g
 
-   You will need to use a level shifter on the I2C lines if you want to run the
-   board at 5v.
+#define GYRO_SCALE_FACTOR_250DPS 131.0    // for ±250 degrees per second
+#define GYRO_SCALE_FACTOR_500DPS 65.5     // for ±500 degrees per second
+#define GYRO_SCALE_FACTOR_1000DPS 32.8    // for ±1000 degrees per second
+#define GYRO_SCALE_FACTOR_2000DPS 16.4    // for ±2000 degrees per second
 
-   Connections on Raspberry Pi Pico board, other boards may vary.
+// Select the desired scale factor
+#define ACCEL_SCALE_FACTOR ACCEL_SCALE_FACTOR_4G  // Change this to the desired accelerometer range
+#define GYRO_SCALE_FACTOR GYRO_SCALE_FACTOR_250DPS // Change this to the desired gyroscope range
 
-   GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is GP4 (pin 6)) -> SDA on MPU6050 board
-   GPIO PICO_DEFAULT_I2C_SCL_PIN (On Pico this is GP5 (pin 7)) -> SCL on MPU6050 board
-   3.3v (pin 36) -> VCC on MPU6050 board
-   GND (pin 38)  -> GND on MPU6050 board
-*/
+// Corresponding configuration values
+#define ACCEL_CONFIG_VALUE 0x08  // for ±4g
+#define GYRO_CONFIG_VALUE 0x00  // for ±250 degrees per second
+#define SAMPLE_RATE_DIV 1  // Sample rate = 1kHz / (1 + 1) = 500Hz
 
-// By default these devices  are on bus address 0x68
-static int addr = 0x68;
-
-#ifdef i2c_default
-static void mpu6050_reset() {
-    // Two byte reset. First byte register, second byte data
-    // There are a load more options to set up the device in different ways that could be added here
-    uint8_t buf[] = {0x6B, 0x80};
-    i2c_write_blocking(i2c_default, addr, buf, 2, false);
+void mpu6050_reset() {
+    uint8_t reset[] = {REG_PWR_MGMT_1, 0x80};
+    i2c_write_blocking(I2C_PORT, MPU6050_ADDR, reset, 2, false);
+    sleep_ms(200);
+    uint8_t wake[] = {REG_PWR_MGMT_1, 0x00};
+    i2c_write_blocking(I2C_PORT, MPU6050_ADDR, wake, 2, false);
+    sleep_ms(200);
 }
 
-static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp) {
-    // For this particular device, we send the device the register we want to read
-    // first, then subsequently read from the device. The register is auto incrementing
-    // so we don't need to keep sending the register we want, just the first.
+void mpu6050_configure() {
+    // Set accelerometer range
+    uint8_t accel_config[] = {REG_ACCEL_CONFIG, ACCEL_CONFIG_VALUE};
+    i2c_write_blocking(I2C_PORT, MPU6050_ADDR, accel_config, 2, false);
 
-    uint8_t buffer[6];
+    // Set gyroscope range
+    uint8_t gyro_config[] = {REG_GYRO_CONFIG, GYRO_CONFIG_VALUE};
+    i2c_write_blocking(I2C_PORT, MPU6050_ADDR, gyro_config, 2, false);
 
-    // Start reading acceleration registers from register 0x3B for 6 bytes
-    uint8_t val = 0x3B;
-    i2c_write_blocking(i2c_default, addr, &val, 1, true); // true to keep master control of bus
-    i2c_read_blocking(i2c_default, addr, buffer, 6, false);
-
-    for (int i = 0; i < 3; i++) {
-        accel[i] = (buffer[i * 2] << 8 | buffer[(i * 2) + 1]);
-    }
-
-    // Now gyro data from reg 0x43 for 6 bytes
-    // The register is auto incrementing on each read
-    val = 0x43;
-    i2c_write_blocking(i2c_default, addr, &val, 1, true);
-    i2c_read_blocking(i2c_default, addr, buffer, 6, false);  // False - finished with bus
-
-    for (int i = 0; i < 3; i++) {
-        gyro[i] = (buffer[i * 2] << 8 | buffer[(i * 2) + 1]);;
-    }
-
-    // Now temperature from reg 0x41 for 2 bytes
-    // The register is auto incrementing on each read
-    val = 0x41;
-    i2c_write_blocking(i2c_default, addr, &val, 1, true);
-    i2c_read_blocking(i2c_default, addr, buffer, 2, false);  // False - finished with bus
-
-    *temp = buffer[0] << 8 | buffer[1];
+    // Set sample rate
+    uint8_t sample_rate[] = {REG_SMPLRT_DIV, SAMPLE_RATE_DIV};
+    i2c_write_blocking(I2C_PORT, MPU6050_ADDR, sample_rate, 2, false);
 }
-#endif
+
+void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp) {
+    uint8_t buffer[14];
+    uint8_t reg = REG_ACCEL_XOUT_H;
+    i2c_write_blocking(I2C_PORT, MPU6050_ADDR, &reg, 1, true);
+    i2c_read_blocking(I2C_PORT, MPU6050_ADDR, buffer, 14, false);
+
+    accel[0] = (buffer[0] << 8) | buffer[1];
+    accel[1] = (buffer[2] << 8) | buffer[3];
+    accel[2] = (buffer[4] << 8) | buffer[5];
+    *temp = (buffer[6] << 8) | buffer[7];
+    gyro[0] = (buffer[8] << 8) | buffer[9];
+    gyro[1] = (buffer[10] << 8) | buffer[11];
+    gyro[2] = (buffer[12] << 8) | buffer[13];
+}
 
 int main() {
+    // Initialize chosen serial port
     stdio_init_all();
-#if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
-    #warning i2c/mpu6050_i2c example requires a board with I2C pins
-    puts("Default I2C pins were not defined");
-    return 0;
-#else
-    printf("Hello, MPU6050! Reading raw data from registers...\n");
 
-    // This example will use I2C0 on the default SDA and SCL pins (4, 5 on a Pico)
-    i2c_init(i2c_default, 400 * 1000);
-    gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
-    gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
-    // Make the I2C pins available to picotool
-    bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
+    // Initialize I2C
+    i2c_init(I2C_PORT, 400 * 1000);
+    gpio_set_function(4, GPIO_FUNC_I2C);
+    gpio_set_function(5, GPIO_FUNC_I2C);
+    gpio_pull_up(4);
+    gpio_pull_up(5);
 
+    // Reset and configure MPU6050
     mpu6050_reset();
+    mpu6050_configure();
 
-    int16_t acceleration[3], gyro[3], temp;
+    uint8_t who_am_i = 0;
+    uint8_t reg = WHO_AM_I_REG;
+    i2c_write_blocking(I2C_PORT, MPU6050_ADDR, &reg, 1, true);
+    i2c_read_blocking(I2C_PORT, MPU6050_ADDR, &who_am_i, 1, false);
+    printf("MPU6050 WHO_AM_I: 0x%02X\n", who_am_i);
+
+    if (who_am_i != 0x68) {
+        printf("MPU6050 not found!\n");
+        while (1);
+    }
+
+    int16_t accel[3], gyro[3], temp;
 
     while (1) {
-        mpu6050_read_raw(acceleration, gyro, &temp);
+        mpu6050_read_raw(accel, gyro, &temp);
 
-        // These are the raw numbers from the chip, so will need tweaking to be really useful.
-        // See the datasheet for more information
-        printf("Acc. X = %d, Y = %d, Z = %d\n", acceleration[0], acceleration[1], acceleration[2]);
-        printf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
-        // Temperature is simple so use the datasheet calculation to get deg C.
-        // Note this is chip temperature.
-        printf("Temp. = %f\n", (temp / 340.0) + 36.53);
+        // Convert raw accelerometer values to g
+        float accel_g[3];
+        accel_g[0] = accel[0] / ACCEL_SCALE_FACTOR;
+        accel_g[1] = accel[1] / ACCEL_SCALE_FACTOR;
+        accel_g[2] = accel[2] / ACCEL_SCALE_FACTOR;
 
-        sleep_ms(100);
+        // Convert raw gyroscope values to degrees per second
+        float gyro_dps[3];
+        gyro_dps[0] = gyro[0] / GYRO_SCALE_FACTOR;
+        gyro_dps[1] = gyro[1] / GYRO_SCALE_FACTOR;
+        gyro_dps[2] = gyro[2] / GYRO_SCALE_FACTOR;
+
+        // Print converted values
+        printf("aX = %.2f g | aY = %.2f g | aZ = %.2f g | gX = %.2f dps | gY = %.2f dps | gZ = %.2f dps | temp = %.2f°C\n",
+            accel_g[0], accel_g[1], accel_g[2], gyro_dps[0], gyro_dps[1], gyro_dps[2], temp / 340.00 + 36.53);
+
+        sleep_ms(500);
     }
-#endif
+
+    return 0;
 }
