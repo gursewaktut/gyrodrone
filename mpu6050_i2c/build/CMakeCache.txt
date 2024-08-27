@@ -166,7 +166,7 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=mpu6050_i2c
+CMAKE_PROJECT_NAME:STATIC=mpu6050_i2c_project
 
 //Path to a program.
 CMAKE_RANLIB:FILEPATH=/home/manraj/.pico-sdk/toolchain/13_2_Rel1/bin/arm-none-eabi-ranlib
@@ -329,6 +329,15 @@ mpu6050_i2c_IS_TOP_LEVEL:STATIC=ON
 
 //Value Computed by CMake
 mpu6050_i2c_SOURCE_DIR:STATIC=/home/manraj/Desktop/VSCODE/gyrodrone/mpu6050_i2c
+
+//Value Computed by CMake
+mpu6050_i2c_project_BINARY_DIR:STATIC=/home/manraj/Desktop/VSCODE/gyrodrone/mpu6050_i2c/build
+
+//Value Computed by CMake
+mpu6050_i2c_project_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+mpu6050_i2c_project_SOURCE_DIR:STATIC=/home/manraj/Desktop/VSCODE/gyrodrone/mpu6050_i2c
 
 //Value Computed by CMake
 pico_sdk_BINARY_DIR:STATIC=/home/manraj/Desktop/VSCODE/gyrodrone/mpu6050_i2c/build/pico-sdk

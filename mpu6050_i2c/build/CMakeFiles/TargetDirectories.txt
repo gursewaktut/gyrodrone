@@ -1,4 +1,4 @@
-/home/manraj/Desktop/VSCODE/gyrodrone/mpu6050_i2c/build/CMakeFiles/mpu6050_i2c.dir
+/home/manraj/Desktop/VSCODE/gyrodrone/mpu6050_i2c/build/CMakeFiles/mpu6050_i2c_project.dir
 /home/manraj/Desktop/VSCODE/gyrodrone/mpu6050_i2c/build/CMakeFiles/edit_cache.dir
 /home/manraj/Desktop/VSCODE/gyrodrone/mpu6050_i2c/build/CMakeFiles/rebuild_cache.dir
 /home/manraj/Desktop/VSCODE/gyrodrone/mpu6050_i2c/build/pico-sdk/CMakeFiles/edit_cache.dir

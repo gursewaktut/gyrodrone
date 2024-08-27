@@ -25,21 +25,23 @@ set(PICO_BOARD pico_w CACHE STRING "Board type")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
 
-project(mpu6050_i2c C CXX ASM)
+project(mpu6050_i2c_project C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
-
-add_executable(mpu6050_i2c
+add_executable(mpu6050_i2c_project
+        main.c
         mpu6050_i2c.c
+        kalman.c
         )
 
 # pull in common dependencies and additional i2c hardware support
-target_link_libraries(mpu6050_i2c pico_stdlib hardware_i2c)
+target_link_libraries(mpu6050_i2c_project pico_stdlib hardware_i2c)
 
 # create map/bin/hex file etc.
-pico_add_extra_outputs(mpu6050_i2c)
+pico_add_extra_outputs(mpu6050_i2c_project)
 
 # add url via pico_set_program_url
+# (you can add a link to a relevant project page or documentation here)
