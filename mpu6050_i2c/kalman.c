@@ -3,9 +3,9 @@
 #include "math.h"
 
 // Define and initialize Kalman filter tuning parameters
-static float Q_angle;   // Process noise covariance for the angle
-static float Q_bias;    // Process noise covariance for the gyroscope bias
-static float R_measure; // Measurement noise covariance
+static float Q_angle = 0.2;   // Process noise covariance for the angle
+static float Q_bias = 0.2;    // Process noise covariance for the gyroscope bias
+static float R_measure = 0.2; // Measurement noise covariance
 
 void kalman_init(Kalman *kalman)
 {

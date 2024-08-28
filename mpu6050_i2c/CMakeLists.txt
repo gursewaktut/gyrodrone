@@ -32,17 +32,25 @@ project(drone C CXX ASM)
 pico_sdk_init()
 
 # Add executable. Default name is 'drone', version 0.1
-add_executable(drone
-        main.c
-        mpu6050_i2c.c
-        kalman.c
-        )
+if (TARGET tinyusb_device)
+    add_executable(drone
+            main.c
+            mpu6050_i2c.c
+            kalman.c
+    )
 
-# Pull in common dependencies and additional i2c hardware support
-target_link_libraries(drone pico_stdlib hardware_i2c)
+    # Pull in common dependencies and additional i2c hardware support
+    target_link_libraries(drone pico_stdlib hardware_i2c)
 
-# Create map/bin/hex file etc.
-pico_add_extra_outputs(drone)
+    # enable usb output, disable uart output
+    pico_enable_stdio_usb(gyro 1)
+    pico_enable_stdio_uart(gyro 0)
 
-# add url via pico_set_program_url
-# (you can add a link to a relevant project page or documentation here)
+    # Create map/bin/hex file etc.
+    pico_add_extra_outputs(drone)
+
+    # add url via pico_set_program_url
+    # (you can add a link to a relevant project page or documentation here)
+elseif(PICO_ON_DEVICE)
+    message("Skipping hello_usb because TinyUSB submodule is not initialized in the SDK")
+endif()
