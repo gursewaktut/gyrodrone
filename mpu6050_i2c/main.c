@@ -5,15 +5,27 @@
 #include "mpu6050_i2c.h"
 #include "kalman.h"
 #include "math.h"
+#include "utils/wifi/wifi.h"
+
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifndef WIFI_AP_NAME
+#define WIFI_AP_NAME "gyrodrone"
+#define WIFI_AP_PASS "gyrodrone"
+#endif
+
+
 int main()
 {
     // Initialize chosen serial port
     stdio_init_all();
+
+    wifi_setup();
+    start_ap();
+
 
     // Initialize I2C
     i2c_init(I2C_PORT, 400 * 1000);

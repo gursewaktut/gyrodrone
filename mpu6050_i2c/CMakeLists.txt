@@ -37,14 +37,26 @@ if (TARGET tinyusb_device)
             main.c
             mpu6050_i2c.c
             kalman.c
+            utils/wifi/wifi.c
+            utils/wifi/dhcpserver/dhcpserver.c
     )
 
+    target_include_directories(drone PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/utils/wifi # for lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/utils/wifi/dhcpserver # for lwipopts
+    )
     # Pull in common dependencies and additional i2c hardware support
-    target_link_libraries(drone pico_stdlib hardware_i2c)
+    target_link_libraries(drone
+        pico_cyw43_arch_lwip_poll
+        pico_stdlib
+        hardware_i2c 
+        # pico_cyw43_arch_lwip_threadsafe_background
+    )
 
     # enable usb output, disable uart output
-    pico_enable_stdio_usb(gyro 1)
-    pico_enable_stdio_uart(gyro 0)
+    pico_enable_stdio_usb(drone 1)
+    pico_enable_stdio_uart(drone 0)
 
     # Create map/bin/hex file etc.
     pico_add_extra_outputs(drone)
