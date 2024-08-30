@@ -1,0 +1,4 @@
+mpu6050_i2c/build/
+pico-sdk/
+*/build/
+
