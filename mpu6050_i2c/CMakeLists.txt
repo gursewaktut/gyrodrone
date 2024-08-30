@@ -56,7 +56,7 @@ if (TARGET tinyusb_device)
 
     # enable usb output, disable uart output
     pico_enable_stdio_usb(drone 1)
-    pico_enable_stdio_uart(drone 0)
+    pico_enable_stdio_uart(drone 1)
 
     # Create map/bin/hex file etc.
     pico_add_extra_outputs(drone)
