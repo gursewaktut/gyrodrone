@@ -27,10 +27,10 @@ void start_ap() {
 
     start_dhcp_server();
 
-    while (true) {
-        cyw43_arch_poll();  // Keep the network stack responsive
-        sleep_ms(1000);
-    }
+    //while (true) {
+        //cyw43_arch_poll();  // Keep the network stack responsive
+        //sleep_ms(1000);
+    //}
 
 }
 
