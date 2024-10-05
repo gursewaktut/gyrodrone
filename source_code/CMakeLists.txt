@@ -45,6 +45,8 @@ if (TARGET tinyusb_device)
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/utils/wifi # for lwipopts
         ${CMAKE_CURRENT_LIST_DIR}/utils/wifi/dhcpserver # for lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/utils/kalman # for lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/utils/mpu6050 # for lwipopts
     )
     # Pull in common dependencies and additional i2c hardware support
     target_link_libraries(drone

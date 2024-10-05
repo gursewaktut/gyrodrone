@@ -2,10 +2,11 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include <stdio.h>
+#include "math.h"
 #include "mpu6050_i2c.h"
 #include "kalman.h"
-#include "math.h"
-#include "utils/wifi/wifi.h"
+#include "wifi.h"
+#include "esc.h"
 
 
 #ifndef M_PI
@@ -17,6 +18,15 @@
 #define WIFI_AP_PASS "gyrodrone"
 #endif
 
+#define AIN1 20
+#define AIN2 21
+#define BIN1 19
+#define BIN2 18
+#define PWMA 8
+#define PWMB 9
+#define STBY 16
+
+Motor motor1, motor2; 
 
 int main()
 {
@@ -25,6 +35,11 @@ int main()
 
     wifi_setup();
     start_ap();
+
+    // set up the esc motor controller
+    esc_init(&motor1, AIN1, AIN2, PWMA, STBY);
+
+    drive(&motor1, 100)
 
 
     // Initialize I2C
